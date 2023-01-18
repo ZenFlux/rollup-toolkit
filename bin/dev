@@ -1,0 +1,13 @@
+#!/usr/bin/env node
+const toolkit = require('./../dist/index').default;
+
+const path = require( 'path' );
+const project = path.join( __dirname, '..', 'tsconfig.dev.json' );
+
+// In dev mode -> use ts-node and dev plugins
+process.env.NODE_ENV = 'development';
+
+require( 'ts-node' ).register( { project } );
+
+toolkit();
+
