@@ -52,9 +52,9 @@ Shorten `rollup.config.ts` and make the config more common.
 - Edit `package.json`
   Add scripts:
   ```json
-  	"toolkit-build": "node_modules/@zenflux/rollup-toolkit/bin/run @build",
-		"toolkit-build-dev": "node_modules/@zenflux/rollup-toolkit/bin/dev @build",
-		"toolkit-watch": "node_modules/@zenflux/rollup-toolkit/bin/run @watch",
-		"toolkit-watch-dev": "node_modules/@zenflux/rollup-toolkit/bin/dev @watch"
+	"toolkit-build": "node_modules/@zenflux/rollup-toolkit/bin/run @build",
+	"toolkit-build-dev": "node_modules/@zenflux/rollup-toolkit/bin/dev @build",
+	"toolkit-watch": "node_modules/@zenflux/rollup-toolkit/bin/run @watch",
+	"toolkit-watch-dev": "node_modules/@zenflux/rollup-toolkit/bin/dev @watch"
   ```
   
