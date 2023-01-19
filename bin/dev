@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-const toolkit = require('./../dist/index').default;
+require( '../scripts/shared' );
+
+const toolkit = require( './../dist/index' ).default;
 
 const path = require( 'path' );
 const project = path.join( __dirname, '..', 'tsconfig.dev.json' );

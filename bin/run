@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-const toolkit = require('./../dist/index.js');
+require( '../scripts/shared' );
+
+const toolkit = require( './../dist/index.js' );
 
 toolkit.default();
 
