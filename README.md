@@ -23,7 +23,7 @@ Shorten `rollup.config.ts` and make the config more common.
   }
 
   const config: IZenFluxRollupConfig = {
-      format: [ 'cjs', 'es', 'esm', 'umd-dev', 'umd-prod' ],
+      format: [ 'cjs', 'es', 'esm', 'umd' ],
       extensions: [ '.ts' ],
       inputFileName: 'src/index.ts',
       outputName: '@zenflux/redux',

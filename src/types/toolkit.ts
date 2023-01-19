@@ -3,7 +3,7 @@
  */
 import { GlobalsOption, ModuleFormat, WarningHandlerWithDefault } from "rollup";
 
-export type TZenFluxFormatType = 'cjs' | 'es' | 'esm' | 'umd-dev' | 'umd-prod';
+export type TZenFluxFormatType = 'cjs' | 'es' | 'esm' | 'umd';
 
 export interface IZenFluxCommonPluginArgs {
     babelExcludeNodeModules?: boolean;
@@ -11,11 +11,8 @@ export interface IZenFluxCommonPluginArgs {
     babelUseRuntime?: boolean;
     babelUseESModules?: boolean;
     createDeclaration?: boolean;
-    development?: boolean;
     extensions?: string[],
     minify?: boolean;
-    production?: boolean;
-    sourceMap?: boolean;
 }
 
 export interface IZenFluxMakeOutputArgs {

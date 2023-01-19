@@ -10,26 +10,21 @@ import type {
 import babel, { RollupBabelInputPluginOptions } from '@rollup/plugin-babel'
 import json from "@rollup/plugin-json";
 import nodeResolve from '@rollup/plugin-node-resolve'
-import replace from '@rollup/plugin-replace'
 import terser from '@rollup/plugin-terser';
 import typescript, { RollupTypescriptOptions } from '@rollup/plugin-typescript'
 
 import { IZenFluxCommonPluginArgs, IZenFluxMakeConfArgs, IZenFluxMakeOutputArgs } from "../types/toolkit";
 
+import E_ERROR_CODES from "../errors/codes";
+
 import * as path from "path";
 import * as fs from "fs";
-import E_ERROR_CODES from "../errors/codes";
 
 const pkg = JSON.parse( fs.readFileSync( path.join( __dirname, "./../../package.json" ), "utf8" ) );
 
 const babelRuntimeVersion = pkg.dependencies[ '@babel/runtime' ].replace( /^[^0-9]*/, '' );
 
 export const makePlugins = ( args: IZenFluxCommonPluginArgs = {} ): OutputPlugin[] => {
-    if ( args.development && args.production ) {
-        console.error( 'Cannot use both development and production' );
-        process.exit( E_ERROR_CODES.CANNOT_SET_BOTH_DEVELOPMENT_AND_PRODUCTION );
-    }
-
     const { extensions } = args;
 
     const plugins = [
@@ -42,8 +37,10 @@ export const makePlugins = ( args: IZenFluxCommonPluginArgs = {} ): OutputPlugin
 
     tsConfig.tsconfig = path.join( process.cwd(), 'tsconfig.json' );
 
-    if ( args.sourceMap ) {
+    if ( 'development' === process.env.NODE_ENV) {
         tsConfig.sourceMap = true;
+        tsConfig.sourceRoot = path.join( process.cwd(), 'src/' );
+        tsConfig.inlineSourceMap = true;
     }
 
     tsConfig.declaration = args.createDeclaration || false;
@@ -77,14 +74,6 @@ export const makePlugins = ( args: IZenFluxCommonPluginArgs = {} ): OutputPlugin
 
     plugins.push( json() );
 
-    if ( args.production || args.development ) {
-        // TODO: Check if its required or runners are enough.
-        plugins.push( replace( {
-            preventAssignment: true,
-            'process.env.NODE_ENV': JSON.stringify( args.production ? 'production' : 'development' ),
-        } ) )
-    }
-
     if ( args.minify ) {
         plugins.push( terser( {
             compress: {
@@ -107,6 +96,7 @@ export const makeOutput = ( args: IZenFluxMakeOutputArgs ): OutputOptions => {
         file: `dist/${ format }/${ args.name }.${ ext }`,
         indent: false,
         exports: 'named',
+        sourcemap: 'development' === process.env.NODE_ENV ? 'inline' : false,
     }
 };
 
@@ -125,7 +115,6 @@ export const makeConfig = ( args: IZenFluxMakeConfArgs ): RollupOptions => {
         input: inputFileName,
         external
     } as RollupOptions;
-
 
     const result: RollupOptions = { ...sharedGeneralConf };
 
@@ -153,7 +142,6 @@ export const makeConfig = ( args: IZenFluxMakeConfArgs ): RollupOptions => {
                 createDeclaration: true,
                 babelUseESModules: true,
                 babelHelpers: 'runtime',
-                // sourceMap: true,
             } );
             break;
 
@@ -172,11 +160,10 @@ export const makeConfig = ( args: IZenFluxMakeConfArgs ): RollupOptions => {
                 babelUseRuntime: true,
                 babelHelpers: 'bundled',
                 minify: true,
-                production: true,
             } );
             break;
 
-        case 'umd-dev':
+        case 'umd':
             result.output = {
                 ...makeOutput( {
                     name: outputFileName,
@@ -191,28 +178,6 @@ export const makeConfig = ( args: IZenFluxMakeConfArgs ): RollupOptions => {
                 babelUseRuntime: true,
                 babelHelpers: 'bundled',
                 babelExcludeNodeModules: true,
-                development: true,
-                // sourceMap: true,
-            } );
-            break;
-
-        case 'umd-prod':
-            result.output = {
-                ...makeOutput( {
-                    name: outputFileName,
-                    format: 'umd',
-                    globals,
-                } ),
-                name: outputName,
-            };
-            result.plugins = makePlugins( {
-                extensions,
-                createDeclaration: false,
-                babelUseRuntime: true,
-                babelHelpers: 'bundled',
-                babelExcludeNodeModules: true,
-                minify: true,
-                production: true,
             } );
             break;
 
