@@ -8,12 +8,16 @@ import type {
 } from 'rollup';
 
 import babel, { RollupBabelInputPluginOptions } from '@rollup/plugin-babel'
-import json from "@rollup/plugin-json";
 import nodeResolve from '@rollup/plugin-node-resolve'
 import terser from '@rollup/plugin-terser';
 import typescript, { RollupTypescriptOptions } from '@rollup/plugin-typescript'
+import json from '@rollup/plugin-json'
 
-import { IZenFluxCommonPluginArgs, IZenFluxMakeConfArgs, IZenFluxMakeOutputArgs } from "../types/toolkit";
+import {
+    IZenFluxCommonPluginArgs,
+    IZenFluxMakeConfArgs,
+    IZenFluxMakeOutputArgs,
+} from "../types/toolkit";
 
 import E_ERROR_CODES from "../errors/codes";
 
@@ -24,8 +28,8 @@ const pkg = JSON.parse( fs.readFileSync( path.join( __dirname, "./../../package.
 
 const babelRuntimeVersion = pkg.dependencies[ '@babel/runtime' ].replace( /^[^0-9]*/, '' );
 
-export const makePlugins = ( args: IZenFluxCommonPluginArgs = {} ): OutputPlugin[] => {
-    const { extensions } = args;
+export const makePlugins = ( args: IZenFluxCommonPluginArgs ): OutputPlugin[] => {
+    const { extensions, format } = args;
 
     const plugins = [
         nodeResolve( {
@@ -33,24 +37,29 @@ export const makePlugins = ( args: IZenFluxCommonPluginArgs = {} ): OutputPlugin
         } ),
     ];
 
-    const tsConfig: RollupTypescriptOptions = {};
+    const tsConfig: RollupTypescriptOptions = {},
+        targetPath = process.cwd(),
+        specificTSConfig = path.join( targetPath, `tsconfig.${ format }.json` );
 
-    tsConfig.tsconfig = path.join( process.cwd(), 'tsconfig.json' );
-
-    if ( 'development' === process.env.NODE_ENV) {
-        tsConfig.sourceMap = true;
-        tsConfig.sourceRoot = path.join( process.cwd(), 'src/' );
-        tsConfig.inlineSourceMap = true;
+    if ( fs.existsSync( specificTSConfig ) ) {
+        tsConfig.tsconfig = specificTSConfig;
+    } else {
+        tsConfig.tsconfig = path.join( targetPath, 'tsconfig.json' );
     }
 
-    tsConfig.declaration = args.createDeclaration || false;
+    // TODO: Create tsconfig.dev.json
+    if ( 'development' === process.env.NODE_ENV ) {
+        tsConfig.sourceMap = true;
+        tsConfig.sourceRoot = path.join( targetPath, 'src/' );
+        tsConfig.inlineSourceMap = true;
+    }
 
     plugins.push( typescript( tsConfig ) );
 
     const babelConfig: RollupBabelInputPluginOptions = {
         extensions,
         plugins: [],
-        babelHelpers: args.babelHelpers,
+        babelHelpers: args.babelHelper,
     };
 
     if ( args.babelExcludeNodeModules ) {
@@ -62,17 +71,16 @@ export const makePlugins = ( args: IZenFluxCommonPluginArgs = {} ): OutputPlugin
             version: babelRuntimeVersion,
             useESModules: true,
         } ] );
-    } else if ( args.babelUseRuntime ) {
+    } else {
         babelConfig.plugins?.push( [ '@babel/plugin-transform-runtime', { version: babelRuntimeVersion } ] );
     }
 
-    if ( 'bundled' === args.babelHelpers ) {
+    if ( 'bundled' === args.babelHelper ) {
         babelConfig.skipPreflightCheck = true;
     }
 
-    plugins.push( babel( babelConfig ) );
-
     plugins.push( json() );
+    plugins.push( babel( babelConfig ) );
 
     if ( args.minify ) {
         plugins.push( terser( {
@@ -88,103 +96,96 @@ export const makePlugins = ( args: IZenFluxCommonPluginArgs = {} ): OutputPlugin
 };
 
 export const makeOutput = ( args: IZenFluxMakeOutputArgs ): OutputOptions => {
-    const { format, ext = 'js' } = args;
-
-    return {
-        format,
-        globals: args.globals,
-        file: `dist/${ format }/${ args.name }.${ ext }`,
-        indent: false,
-        exports: 'named',
-        sourcemap: 'development' === process.env.NODE_ENV ? 'inline' : false,
-    }
-};
-
-export const makeConfig = ( args: IZenFluxMakeConfArgs ): RollupOptions => {
     const {
+        ext = 'js',
         format,
-        globals = {},
-        extensions = [ '.ts' ],
-        external = [],
-        inputFileName,
+        globals,
         outputName,
         outputFileName
     } = args;
 
-    const sharedGeneralConf: any = {
+    const result = {
+        format,
+        file: `dist/${ format }/${ outputFileName }.${ ext }`,
+        indent: false,
+        exports: 'named',
+        sourcemap: 'development' === process.env.NODE_ENV ? 'inline' : false,
+    } as OutputOptions;
+
+    if ( globals ) {
+        result.globals = globals;
+    }
+
+    if ( outputName ){
+        result.name = outputName;
+    }
+
+    return result;
+};
+
+export const makeConfig = ( args: IZenFluxMakeConfArgs ): RollupOptions => {
+    const {
+        extensions,
+        external = [],
+        format,
+        globals,
+        inputFileName,
+        onWarn,
+        outputFileName,
+        outputName,
+    } = args;
+
+    const result: RollupOptions = {
         input: inputFileName,
-        external
-    } as RollupOptions;
+        external,
+    };
 
-    const result: RollupOptions = { ...sharedGeneralConf };
+    const outputArgs = {
+        format,
+        globals,
+        outputFileName,
+    } as IZenFluxMakeOutputArgs;
 
+    if ( 'esm' === format ) {
+        outputArgs.ext = 'mjs';
+    }
+
+    if ( outputName ) {
+        outputArgs.outputName = outputName;
+    }
+
+    result.output = makeOutput( outputArgs );
+
+    const pluginsArgs: IZenFluxCommonPluginArgs = {
+        extensions,
+        format,
+        minify: 'production' === process.env.NODE_ENV,
+    };
+
+    // noinspection FallThroughInSwitchStatementJS
     switch ( format ) {
-        case 'cjs':
-            result.output = makeOutput( {
-                name: outputFileName,
-                format: 'cjs',
-            } );
-            result.plugins = makePlugins( {
-                extensions,
-                createDeclaration: false,
-                babelUseRuntime: true,
-                babelHelpers: 'runtime'
-            } );
-            break;
-
         case 'es':
-            result.output = makeOutput( {
-                name: outputFileName,
-                format: 'es',
-            } );
-            result.plugins = makePlugins( {
-                extensions,
-                createDeclaration: true,
-                babelUseESModules: true,
-                babelHelpers: 'runtime',
-            } );
-            break;
-
-        case 'esm':
-            result.output = {
-                ...makeOutput( {
-                    name: outputFileName,
-                    format: 'es',
-                    ext: 'mjs',
-                } ),
-                name: outputName,
-            };
-            result.plugins = makePlugins( {
-                extensions,
-                createDeclaration: false,
-                babelUseRuntime: true,
-                babelHelpers: 'bundled',
-                minify: true,
-            } );
+            pluginsArgs.babelUseESModules = true;
+        case 'cjs':
+            pluginsArgs.babelHelper = 'runtime';
             break;
 
         case 'umd':
-            result.output = {
-                ...makeOutput( {
-                    name: outputFileName,
-                    format: 'umd',
-                    globals,
-                } ),
-                name: outputName,
-            };
-            result.plugins = makePlugins( {
-                extensions,
-                createDeclaration: false,
-                babelUseRuntime: true,
-                babelHelpers: 'bundled',
-                babelExcludeNodeModules: true,
-            } );
+            pluginsArgs.babelExcludeNodeModules = true;
+        case 'esm':
+            pluginsArgs.babelHelper = 'bundled';
             break;
 
         default: {
             console.error( `Unknown format: ${ format }` );
             process.exit( E_ERROR_CODES.UNKNOWN_FORMAT );
         }
+    }
+
+    result.plugins = makePlugins( pluginsArgs );
+
+    if ( onWarn ) {
+        result.onwarn = onWarn;
     }
 
     return result;

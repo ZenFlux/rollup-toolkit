@@ -1,6 +1,6 @@
 {
 	"name": "@zenflux/rollup-toolkit",
-	"version": "0.0.0-alpha.5",
+	"version": "0.0.0-alpha.13",
 	"description": "ZenFlux rollup-toolkit",
 	"keywords": [
 		"zenflux",
@@ -25,17 +25,19 @@
 	},
 	"files": [
 		"bin",
+		"scripts",
 		"dist",
 		"tsconfig.json",
 		"tsconfig.dev.json"
 	],
 	"scripts": {
 		"build": "shx rm -rf dist && tsc",
-		"build-dev": "shx rm -rf dist && tsc --sourceMap",
+		"build-dev": "shx rm -rf dist && tsc --sourceMap -p ./tsconfig.dev.json",
 		"watch": "tsc-watch --sourceMap --noClear -p ./tsconfig.dev.json"
 	},
 	"dependencies": {
 		"@babel/core": "^7.20.12",
+		"@babel/plugin-transform-runtime": "^7.19.6",
 		"@babel/runtime": "^7.20.7",
 		"@rollup/plugin-babel": "^6.0.3",
 		"@rollup/plugin-json": "^6.0.0",

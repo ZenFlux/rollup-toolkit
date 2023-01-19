@@ -4,22 +4,23 @@
 import { GlobalsOption, ModuleFormat, WarningHandlerWithDefault } from "rollup";
 
 export type TZenFluxFormatType = 'cjs' | 'es' | 'esm' | 'umd';
+export type TZenBabelHelperType = 'bundled' | 'runtime' | 'inline' | 'external'
 
 export interface IZenFluxCommonPluginArgs {
     babelExcludeNodeModules?: boolean;
-    babelHelpers?: 'bundled' | 'runtime' | 'inline' | 'external';
-    babelUseRuntime?: boolean;
+    babelHelper?: TZenBabelHelperType;
     babelUseESModules?: boolean;
-    createDeclaration?: boolean;
-    extensions?: string[],
-    minify?: boolean;
+    extensions: string[],
+    format: ModuleFormat;
+    minify: boolean;
 }
 
 export interface IZenFluxMakeOutputArgs {
     ext?: string;
     format: ModuleFormat;
     globals?: GlobalsOption;
-    name: string;
+    outputFileName: string;
+    outputName: string,
 }
 
 export interface IZenFluxMakeConfArgs {
@@ -30,7 +31,7 @@ export interface IZenFluxMakeConfArgs {
     inputFileName: string,
     onWarn?: WarningHandlerWithDefault,
     outputFileName: string,
-    outputName?: string,
+    outputName: string,
 }
 
 export interface IZenFluxRollupConfig extends Omit<IZenFluxMakeConfArgs, 'format'> {
