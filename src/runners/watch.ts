@@ -11,7 +11,7 @@ export default class Watch extends ConfigBase {
     public async run() {
         const rollup = await import( 'rollup' );
 
-        for ( const config of this.getConfig() ) {
+        for ( const config of this.getRollupConfig() ) {
             const output = config.output as OutputOptions;
 
             if ( ! output ) {

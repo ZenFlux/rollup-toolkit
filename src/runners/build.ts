@@ -8,7 +8,7 @@ import ConfigBase from "../base/config-base";
 export default class Build extends ConfigBase {
     public async run() {
         const rollup = await import( 'rollup' ),
-            rollupConfig = this.getConfig();
+            rollupConfig = this.getRollupConfig();
 
         for ( const config of rollupConfig ) {
             const output = config.output as OutputOptions;

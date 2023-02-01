@@ -3,9 +3,10 @@
  */
 export enum E_ERROR_CODES {
     NONE,
-    FILE_NOT_FOUND,
+    TOOLKIT_CONFIG_FILE_NOT_FOUND,
     OUTPUT_NOT_FOUND,
     UNKNOWN_FORMAT,
+    TS_CONFIG_NOT_FOUND,
 }
 
 export default E_ERROR_CODES;

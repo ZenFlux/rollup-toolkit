@@ -13,27 +13,27 @@ Shorten `rollup.config.ts` and make the config more common.
 
   ```ts
   import { WarningHandlerWithDefault } from "rollup";
-  import { IZenFluxRollupConfig } from "@zenflux/rollup-toolkit";
-
+  import { IZenFluxRollupToolkitOptions, IZenToolkitConfig } from "@zenflux/rollup-toolkit";
+  
   const onWarn: WarningHandlerWithDefault = ( warning, warn ) => {
       // Handle issue with redux/toolkit.
       if ( warning.code === 'THIS_IS_UNDEFINED' ) {
           return false;
       }
   }
+  
+  const toolkitOptions: IZenFluxRollupToolkitOptions = {
+    verboseTSConfig: true,
+  };
 
-  const config: IZenFluxRollupConfig = {
+  const config: IZenToolkitConfig = {
       format: [ 'cjs', 'es', 'esm', 'umd' ],
       extensions: [ '.ts' ],
       inputFileName: 'src/index.ts',
       outputName: '@zenflux/redux',
       outputFileName: 'zenflux-redux',
       globals: {
-          '@zenflux/core': 'ZenCore',
-          '@reduxjs/toolkit': 'ReduxToolkit',
-          'react': 'React',
-          'react-dom': 'ReactDOM',
-          'react-redux': 'ReactRedux'
+          jquery: "jQuery",
       },
       external: [
           '@babel/runtime',
@@ -47,14 +47,20 @@ Shorten `rollup.config.ts` and make the config more common.
   }
 
   export default config;
-
   ```
 - Edit `package.json`
   Add scripts:
-  ```json
-	"toolkit-build": "node_modules/@zenflux/rollup-toolkit/bin/run @build",
-	"toolkit-build-dev": "node_modules/@zenflux/rollup-toolkit/bin/dev @build",
-	"toolkit-watch": "node_modules/@zenflux/rollup-toolkit/bin/run @watch",
-	"toolkit-watch-dev": "node_modules/@zenflux/rollup-toolkit/bin/dev @watch"
-  ```
+    ```json
+    "toolkit-build": "node_modules/@zenflux/rollup-toolkit/bin/run @build",
+    "toolkit-build-dev": "node_modules/@zenflux/rollup-toolkit/bin/dev @build",
+    "toolkit-watch": "node_modules/@zenflux/rollup-toolkit/bin/run @watch",
+    "toolkit-watch-dev": "node_modules/@zenflux/rollup-toolkit/bin/dev @watch"
+    ```
   
+## `tsconfig.json` fallback:
+- Dev
+    - `tsconfig.{format}.dev.json`
+    - `tsconfig.dev.json`
+- Prod
+    - `tsconfig.{format}.json`
+    - `tsconfig.json`

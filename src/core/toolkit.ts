@@ -4,7 +4,7 @@
 import type {
     RollupOptions,
     OutputPlugin,
-    OutputOptions,
+    OutputOptions, ModuleFormat,
 } from 'rollup';
 
 import babel, { RollupBabelInputPluginOptions } from '@rollup/plugin-babel'
@@ -17,6 +17,7 @@ import {
     IZenFluxCommonPluginArgs,
     IZenFluxMakeConfArgs,
     IZenFluxMakeOutputArgs,
+    IZenToolkitConfig,
 } from "../types/toolkit";
 
 import E_ERROR_CODES from "../errors/codes";
@@ -24,9 +25,73 @@ import E_ERROR_CODES from "../errors/codes";
 import * as path from "path";
 import * as fs from "fs";
 
-const pkg = JSON.parse( fs.readFileSync( path.join( __dirname, "./../../package.json" ), "utf8" ) );
+const gPackageJSON = JSON.parse( fs.readFileSync( path.join( __dirname, "./../../package.json" ), "utf8" ) ),
+    gBabelRuntimeVersion = gPackageJSON.dependencies[ '@babel/runtime' ].replace( /^[^0-9]*/, '' ),
+    gTargetPath = process.cwd();
 
-const babelRuntimeVersion = pkg.dependencies[ '@babel/runtime' ].replace( /^[^0-9]*/, '' );
+
+let gToolkitConfig: IZenToolkitConfig = {} as IZenToolkitConfig;
+
+/**
+ * Function setToolkitConfig().
+ *
+ * @internal
+ *
+ * The method sets the toolkit config. and it has nothing to-do with rollup config.
+ * Used to pass the `rollup.toolkit.ts` config core.
+ */
+export function setToolkitConfig( config: IZenToolkitConfig ) {
+    gToolkitConfig = config;
+}
+
+export function getTSConfigPath( format: ModuleFormat ): string {
+    const result: RollupTypescriptOptions = {},
+        { verboseTSConfig = false } = gToolkitConfig.toolkitOptions || {},
+        targetExist = ( path: string ) => {
+            if ( verboseTSConfig ) {
+                console.log( `Checking for '${ path }'` );
+            }
+
+            const result = fs.existsSync( path );
+
+            if ( verboseTSConfig ) {
+                if ( result ) {
+                    console.log( `Found '${ path }'` );
+                } else {
+                    console.log( `Not found '${ path }'` );
+                }
+            }
+
+            return result;
+        };
+
+    if ( 'development' === process.env.NODE_ENV ) {
+        const tsConfigDevFormatPath = path.join( gTargetPath, `tsconfig.${ format }.dev.json` ),
+            tsConfigDevPath = path.join( gTargetPath, 'tsconfig.dev.json' );
+
+        if ( targetExist( tsConfigDevFormatPath ) ) {
+            return tsConfigDevFormatPath;
+        } else if ( targetExist( tsConfigDevPath ) ) {
+            return tsConfigDevPath;
+        }
+    }
+
+    const tsConfigFormatPath = path.join( gTargetPath, `tsconfig.${ format }.json` );
+
+    if ( targetExist( tsConfigFormatPath ) ) {
+        return tsConfigFormatPath;
+    }
+
+    const tsConfigPath = path.join( gTargetPath, 'tsconfig.json' );
+
+    if ( targetExist( tsConfigPath ) ) {
+        return tsConfigPath;
+    }
+
+
+    console.error( "'tsconfig.json' not found." );
+    process.exit( E_ERROR_CODES.TS_CONFIG_NOT_FOUND );
+}
 
 export const getPlugins = ( args: IZenFluxCommonPluginArgs ): OutputPlugin[] => {
     const { extensions, format } = args;
@@ -38,20 +103,10 @@ export const getPlugins = ( args: IZenFluxCommonPluginArgs ): OutputPlugin[] => 
     ];
 
     const tsConfig: RollupTypescriptOptions = {},
-        targetPath = process.cwd(),
-        specificTSConfig = path.join( targetPath, `tsconfig.${ format }.json` );
+        path = getTSConfigPath( format );
 
-    if ( fs.existsSync( specificTSConfig ) ) {
-        tsConfig.tsconfig = specificTSConfig;
-    } else {
-        tsConfig.tsconfig = path.join( targetPath, 'tsconfig.json' );
-    }
-
-    // TODO: Create tsconfig.dev.json
-    if ( 'development' === process.env.NODE_ENV ) {
-        tsConfig.sourceMap = true;
-        tsConfig.sourceRoot = path.join( targetPath, 'src/' );
-        tsConfig.inlineSourceMap = true;
+    if ( path ) {
+        tsConfig.tsconfig = path;
     }
 
     plugins.push( typescript( tsConfig ) );
@@ -68,11 +123,11 @@ export const getPlugins = ( args: IZenFluxCommonPluginArgs ): OutputPlugin[] => 
 
     if ( args.babelUseESModules ) {
         babelConfig.plugins?.push( [ '@babel/plugin-transform-runtime', {
-            version: babelRuntimeVersion,
+            version: gBabelRuntimeVersion,
             useESModules: true,
         } ] );
     } else {
-        babelConfig.plugins?.push( [ '@babel/plugin-transform-runtime', { version: babelRuntimeVersion } ] );
+        babelConfig.plugins?.push( [ '@babel/plugin-transform-runtime', { version: gBabelRuntimeVersion } ] );
     }
 
     if ( 'bundled' === args.babelHelper ) {
@@ -116,7 +171,7 @@ export const getOutput = ( args: IZenFluxMakeOutputArgs ): OutputOptions => {
         result.globals = globals;
     }
 
-    if ( outputName ){
+    if ( outputName ) {
         result.name = outputName;
     }
 

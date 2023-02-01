@@ -34,6 +34,16 @@ export interface IZenFluxMakeConfArgs {
     outputName: string,
 }
 
-export interface IZenFluxRollupConfig extends Omit<IZenFluxMakeConfArgs, 'format'> {
+// TODO: Allow manipulation from CLI/ENV.
+export interface IZenFluxRollupToolkitOptions {
+    /**
+     * Recommended to use in the introductory stages, to understand what is going on.
+     */
+    verboseTSConfig?: boolean;
+}
+
+export interface IZenToolkitConfig extends Omit<IZenFluxMakeConfArgs, 'format'> {
     format: TZenFluxFormatType [];
+
+    toolkitOptions?: IZenFluxRollupToolkitOptions;
 }

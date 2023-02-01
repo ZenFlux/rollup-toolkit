@@ -3,9 +3,9 @@
  */
 import { RollupOptions} from "rollup";
 
-import { IZenFluxRollupConfig } from "../types/toolkit";
+import { IZenToolkitConfig } from "../types/toolkit";
 
-import { getConfig } from "../core/toolkit";
+import { getConfig, setToolkitConfig } from "../core/toolkit";
 
 import E_ERROR_CODES from "../errors/codes";
 
@@ -15,18 +15,18 @@ import * as path from "path";
 export abstract class ConfigBase {
     private rollupConfig: RollupOptions[] = [];
 
-    private toolkitConfig!: IZenFluxRollupConfig;
+    private toolkitConfig: IZenToolkitConfig = {} as IZenToolkitConfig;
 
     public async loadConfig() {
         const toolkitPath = path.join( process.cwd(), `rollup.toolkit.ts` );
 
         // Check if target `rollup.toolkit.ts` exists.
         if ( ! fs.existsSync( toolkitPath ) ) {
-            console.error( `File not found: ${ toolkitPath }` );
-            process.exit( E_ERROR_CODES.FILE_NOT_FOUND );
+            console.error( "'rollup.toolkit.ts' file not found" );
+            process.exit( E_ERROR_CODES.TOOLKIT_CONFIG_FILE_NOT_FOUND );
         }
 
-        // If it's not development its also not module, so its required to compile `rollup.toolkit.config`.
+        // If it's not development its also not module, its required to compile `rollup.toolkit.config`.
         if ( ! process.env.development ) {
             const ts = require( "typescript" ),
                 JSSourceCode = ts.transpile( fs.readFileSync( toolkitPath, "utf8" ), {
@@ -43,15 +43,18 @@ export abstract class ConfigBase {
             this.toolkitConfig = ( await import( toolkitPath ) ).default;
         }
 
-        // Get global config.
-        this.rollupConfig = this.getGlobalConfig( this.toolkitConfig );
+        // Pass the config to the toolkit core.
+        setToolkitConfig( this.toolkitConfig );
+
+        // Get rollup config.
+        this.rollupConfig = this.getConfigForEachFormat( this.toolkitConfig );
     }
 
-    protected getConfig() {
+    protected getRollupConfig() {
         return this.rollupConfig;
     }
 
-    private getGlobalConfig( config = this.toolkitConfig ) {
+    private getConfigForEachFormat( config = this.toolkitConfig ) {
         return config.format.map( format => getConfig( {
             ...config,
             format
