@@ -5,7 +5,7 @@ import { RollupOptions} from "rollup";
 
 import { IZenFluxRollupConfig } from "../types/toolkit";
 
-import { makeConfig } from "../core/toolkit";
+import { getConfig } from "../core/toolkit";
 
 import E_ERROR_CODES from "../errors/codes";
 
@@ -52,7 +52,7 @@ export abstract class ConfigBase {
     }
 
     private getGlobalConfig( config = this.toolkitConfig ) {
-        return config.format.map( format => makeConfig( {
+        return config.format.map( format => getConfig( {
             ...config,
             format
         } ) );

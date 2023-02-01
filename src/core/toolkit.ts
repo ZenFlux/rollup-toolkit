@@ -28,7 +28,7 @@ const pkg = JSON.parse( fs.readFileSync( path.join( __dirname, "./../../package.
 
 const babelRuntimeVersion = pkg.dependencies[ '@babel/runtime' ].replace( /^[^0-9]*/, '' );
 
-export const makePlugins = ( args: IZenFluxCommonPluginArgs ): OutputPlugin[] => {
+export const getPlugins = ( args: IZenFluxCommonPluginArgs ): OutputPlugin[] => {
     const { extensions, format } = args;
 
     const plugins = [
@@ -95,7 +95,7 @@ export const makePlugins = ( args: IZenFluxCommonPluginArgs ): OutputPlugin[] =>
     return plugins;
 };
 
-export const makeOutput = ( args: IZenFluxMakeOutputArgs ): OutputOptions => {
+export const getOutput = ( args: IZenFluxMakeOutputArgs ): OutputOptions => {
     const {
         ext = 'js',
         format,
@@ -123,7 +123,7 @@ export const makeOutput = ( args: IZenFluxMakeOutputArgs ): OutputOptions => {
     return result;
 };
 
-export const makeConfig = ( args: IZenFluxMakeConfArgs ): RollupOptions => {
+export const getConfig = ( args: IZenFluxMakeConfArgs ): RollupOptions => {
     const {
         extensions,
         external = [],
@@ -154,7 +154,7 @@ export const makeConfig = ( args: IZenFluxMakeConfArgs ): RollupOptions => {
         outputArgs.outputName = outputName;
     }
 
-    result.output = makeOutput( outputArgs );
+    result.output = getOutput( outputArgs );
 
     const pluginsArgs: IZenFluxCommonPluginArgs = {
         extensions,
@@ -182,7 +182,7 @@ export const makeConfig = ( args: IZenFluxMakeConfArgs ): RollupOptions => {
         }
     }
 
-    result.plugins = makePlugins( pluginsArgs );
+    result.plugins = getPlugins( pluginsArgs );
 
     if ( onWarn ) {
         result.onwarn = onWarn;
