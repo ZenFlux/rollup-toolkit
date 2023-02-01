@@ -27,6 +27,8 @@ Shorten `rollup.config.ts` and make the config more common.
   };
 
   const config: IZenToolkitConfig = {
+      toolkitOptions,
+      
       format: [ 'cjs', 'es', 'esm', 'umd' ],
       extensions: [ '.ts' ],
       inputFileName: 'src/index.ts',
