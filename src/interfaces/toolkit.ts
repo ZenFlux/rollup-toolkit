@@ -6,7 +6,7 @@ import { GlobalsOption, ModuleFormat, WarningHandlerWithDefault } from "rollup";
 export type TZenFluxFormatType = 'cjs' | 'es' | 'esm' | 'umd';
 export type TZenBabelHelperType = 'bundled' | 'runtime' | 'inline' | 'external'
 
-export interface IZenFluxCommonPluginArgs {
+export interface IZenFluxPluginArgs {
     babelExcludeNodeModules?: boolean;
     babelHelper?: TZenBabelHelperType;
     babelUseESModules?: boolean;
@@ -15,7 +15,7 @@ export interface IZenFluxCommonPluginArgs {
     minify: boolean;
 }
 
-export interface IZenFluxMakeOutputArgs {
+export interface IZenFluxOutputArgs {
     ext?: string;
     format: ModuleFormat;
     globals?: GlobalsOption;
@@ -23,7 +23,7 @@ export interface IZenFluxMakeOutputArgs {
     outputName: string,
 }
 
-export interface IZenFluxMakeConfArgs {
+export interface IZenFluxConfigArgs {
     extensions: string[],
     external?: string[] | RegExp[],
     format: TZenFluxFormatType
@@ -42,7 +42,7 @@ export interface IZenFluxRollupToolkitOptions {
     verboseTSConfig?: boolean;
 }
 
-export interface IZenToolkitConfig extends Omit<IZenFluxMakeConfArgs, 'format'> {
+export interface IZenToolkitConfig extends Omit<IZenFluxConfigArgs, 'format'> {
     format: TZenFluxFormatType [];
 
     toolkitOptions?: IZenFluxRollupToolkitOptions;

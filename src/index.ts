@@ -23,4 +23,4 @@ export default async function boot() {
     }
 }
 
-export * from './types/toolkit';
+export * from './interfaces/toolkit';

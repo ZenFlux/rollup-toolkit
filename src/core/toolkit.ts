@@ -14,11 +14,11 @@ import typescript, { RollupTypescriptOptions } from '@rollup/plugin-typescript'
 import json from '@rollup/plugin-json'
 
 import {
-    IZenFluxCommonPluginArgs,
-    IZenFluxMakeConfArgs,
-    IZenFluxMakeOutputArgs,
+    IZenFluxPluginArgs,
+    IZenFluxOutputArgs,
+    IZenFluxConfigArgs,
     IZenToolkitConfig,
-} from "../types/toolkit";
+} from "../interfaces/toolkit";
 
 import E_ERROR_CODES from "../errors/codes";
 
@@ -93,7 +93,7 @@ export function getTSConfigPath( format: ModuleFormat ): string {
     process.exit( E_ERROR_CODES.TS_CONFIG_NOT_FOUND );
 }
 
-export const getPlugins = ( args: IZenFluxCommonPluginArgs ): OutputPlugin[] => {
+export const getPlugins = ( args: IZenFluxPluginArgs ): OutputPlugin[] => {
     const { extensions, format } = args;
 
     const plugins = [
@@ -150,7 +150,7 @@ export const getPlugins = ( args: IZenFluxCommonPluginArgs ): OutputPlugin[] => 
     return plugins;
 };
 
-export const getOutput = ( args: IZenFluxMakeOutputArgs ): OutputOptions => {
+export const getOutput = ( args: IZenFluxOutputArgs ): OutputOptions => {
     const {
         ext = 'js',
         format,
@@ -178,7 +178,7 @@ export const getOutput = ( args: IZenFluxMakeOutputArgs ): OutputOptions => {
     return result;
 };
 
-export const getConfig = ( args: IZenFluxMakeConfArgs ): RollupOptions => {
+export const getConfig = ( args: IZenFluxConfigArgs ): RollupOptions => {
     const {
         extensions,
         external = [],
@@ -199,7 +199,7 @@ export const getConfig = ( args: IZenFluxMakeConfArgs ): RollupOptions => {
         format,
         globals,
         outputFileName,
-    } as IZenFluxMakeOutputArgs;
+    } as IZenFluxOutputArgs;
 
     if ( 'esm' === format ) {
         outputArgs.ext = 'mjs';
@@ -211,7 +211,7 @@ export const getConfig = ( args: IZenFluxMakeConfArgs ): RollupOptions => {
 
     result.output = getOutput( outputArgs );
 
-    const pluginsArgs: IZenFluxCommonPluginArgs = {
+    const pluginsArgs: IZenFluxPluginArgs = {
         extensions,
         format,
         minify: 'production' === process.env.NODE_ENV,

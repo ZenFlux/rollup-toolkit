@@ -3,7 +3,7 @@
  */
 import { RollupOptions} from "rollup";
 
-import { IZenToolkitConfig } from "../types/toolkit";
+import { IZenToolkitConfig } from "../interfaces/toolkit";
 
 import { getConfig, setToolkitConfig } from "../core/toolkit";
 
